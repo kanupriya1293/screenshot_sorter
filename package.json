@@ -1,0 +1,31 @@
+{
+  "name": "screenshot-sorter",
+  "version": "1.0.0",
+  "description": "Automated screenshot sorting and organization using n8n workflows",
+  "main": "index.js",
+  "scripts": {
+    "start": "docker-compose up -d",
+    "stop": "docker-compose down",
+    "restart": "docker-compose restart",
+    "logs": "docker-compose logs -f n8n",
+    "status": "docker-compose ps",
+    "clean": "docker-compose down -v && docker system prune -f",
+    "setup": "bash setup.sh"
+  },
+  "keywords": [
+    "screenshot",
+    "sorting",
+    "n8n",
+    "docker",
+    "workflow",
+    "automation"
+  ],
+  "author": "Kanupriya Agarwal",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}
+

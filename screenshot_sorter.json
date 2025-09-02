@@ -1,0 +1,255 @@
+{
+  "name": "screenshot_sorter",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "=You are an image analysis assistant.  \nYou will receive:  \n- A screenshot image, and  \n- Its file name is {{ $json.fileName }}.  \n\nYour goals:  \n1. Categorize the screenshot into one of the defined categories.  \n2. Use the timestamp in the file name (strongest signal of when it was captured) to estimate its age.  \n3. Based on the category and age, recommend whether to keep or delete.  \n4. Provide a brief reason for your decision.  \n\nAssumption: Timestamps are in San Francisco time.  \n\n### Categories\n- **receipt_confirmation**: payment confirmations, receipts, order confirmations.  \n- **coding_UI**: code snippets, error messages, zoomed-in UI screenshots to illustrate bugs or design elements.  \n- **design_inspo**: full UI screens, product flows, aesthetic UX references.  \n- **edu_info**: slides, infographics, charts, tutorials.  \n- **image_asset**: cartoons, logos, icons, stock images, illustrations, or images easily downloadable from the internet.  \n- **other**: anything that does not fit above. Provide a short descriptive summary in `reason`.  \n\n### Retention Rules\n- **receipt_confirmation**:  \n  - Keep if less than 1 year old.  \n  - Delete if 1 year or older.  \n  - If it is an order confirmation, delete if more than 1 month old.  \n\n- **coding_UI**:  \n  - Keep if less than 1 week old.  \n  - Delete if 1 week or older.  \n\n- **design_inspo**:  \n  - Keep (user will review later).  \n\n- **edu_info**:  \n  - Keep (user will review later).  \n\n- **image_asset**:  \n  - Default to delete, unless clearly unique or non-trivial.  \n\n- **other**:  \n  - Default to keep, but provide a short descriptiof what is in the image in `reason` to help user ispot pattern for new category.\n\n### Output Format\nRespond in JSON only:  \n{\"category\": \"<one of the categories>\", \"recommendation\": \"<keep or delete>\", \"reason\": \"<short explanation, including age logic if relevant>\"}",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        48,
+        64
+      ],
+      "id": "db9145bc-ec6a-4be9-89d1-9464cad4fe6f",
+      "name": "Analyze image",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -976,
+        -96
+      ],
+      "id": "adade11c-d720-4a20-b4a2-1b424ea04f48",
+      "name": "Trigger Screenshot Sorter"
+    },
+    {
+      "parameters": {
+        "executeOnce": false,
+        "command": "mkdir -p \"/data/screenshots/organised/keep\"\nmkdir -p \"/data/screenshots/organised/delete\"\n\nfor category in receipt_confirmation coding_UI design_inspo edu_info image_asset other; do mkdir -p \"/data/screenshots/organised/keep/$category\" mkdir -p \"/data/screenshots/organised/delete/$category\"; done"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        -96
+      ],
+      "id": "717e7b13-ba0e-479b-91fa-76c8d4b73093",
+      "name": "Create Folders for Sorting"
+    },
+    {
+      "parameters": {
+        "fileSelector": "/data/screenshots/*.png",
+        "options": {
+          "dataPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        -96
+      ],
+      "id": "72ed31be-3302-4269-a89d-0ecea505340e",
+      "name": "Fetch Screenshots from Desktop"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -256,
+        -96
+      ],
+      "id": "859bc69a-8bfc-4aff-8d61-2a8e7ebf2b07",
+      "name": "Loop Over Each Screenshot"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "78980c17-cb5f-4729-8898-dff4da7c6056",
+              "name": "fileName",
+              "value": "={{ $('Loop Over Each Screenshot').item.json.fileName }}",
+              "type": "string"
+            },
+            {
+              "id": "c57c976e-96f0-4b66-9879-57f45bf6c124",
+              "name": "category",
+              "value": "={{ $json.category }}",
+              "type": "string"
+            },
+            {
+              "id": "984e6de2-793d-476f-b3d3-55a7a1a620f4",
+              "name": "recommendation",
+              "value": "={{ $json.recommendation }}",
+              "type": "string"
+            },
+            {
+              "id": "a6abe904-25c9-4836-ab4c-52ed317dca34",
+              "name": "reason",
+              "value": "={{ $json.reason }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        528,
+        64
+      ],
+      "id": "3f019382-c576-4a0d-b52c-36ab87bdc080",
+      "name": "Link Category to Filename"
+    },
+    {
+      "parameters": {
+        "jsCode": "//JSON extraction from API responses\nconst items = $input.all();\n\nconst processedItems = items.map(item => {\n  const content = item.json.content;\n  \n  // Multiple regex patterns to catch different formats\n  const patterns = [\n    /```json\\s*(\\{.*?\\})\\s*```/s,  // Standard markdown JSON\n    /```\\s*(\\{.*?\\})\\s*```/s,      // JSON without language specifier\n    /(\\{.*?\\})/s                   // Just JSON object\n  ];\n  \n  // Try each pattern\n  for (const pattern of patterns) {\n    const match = content.match(pattern);\n    if (match) {\n      try {\n        const parsedJson = JSON.parse(match[1]);\n        return {\n          json: {\n            category: parsedJson.category,\n            recommendation: parsedJson.recommendation,\n            reason: parsedJson.reason\n          }\n        };\n      } catch (error) {\n        // Continue to next pattern\n        continue;\n      }\n    }\n  }\n  \n  // If no valid JSON found\n  return {\n    json: {\n      error: \"Could not extract valid JSON\"\n    }\n  };\n});\n\nreturn processedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        64
+      ],
+      "id": "6a0dd953-442a-485f-a612-a28513a814a5",
+      "name": "Parse Response to JSON"
+    },
+    {
+      "parameters": {
+        "command": "=mv \"/data/screenshots/{{ $json.fileName }}\" \"/data/screenshots/organised/{{ $json.recommendation }}/{{ $json.category }}/{{ $json.fileName }}\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        768,
+        64
+      ],
+      "id": "ba20ffb7-d17c-492d-b0d3-836127fa60d2",
+      "name": "Move File to Sorting Folder"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Parse Response to JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Screenshot Sorter": {
+      "main": [
+        [
+          {
+            "node": "Create Folders for Sorting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Folders for Sorting": {
+      "main": [
+        [
+          {
+            "node": "Fetch Screenshots from Desktop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Screenshots from Desktop": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Each Screenshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Each Screenshot": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Link Category to Filename": {
+      "main": [
+        [
+          {
+            "node": "Move File to Sorting Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Response to JSON": {
+      "main": [
+        [
+          {
+            "node": "Link Category to Filename",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move File to Sorting Folder": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Each Screenshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "42f912f9-8ac9-42b3-8f34-11ae9379e8f1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "61482188ac5971df942d2de1c07d1dc57cc1c1f8fe02a35bc3442ec8b37c26c4"
+  },
+  "id": "oXzbpimZWKPLeISO",
+  "tags": []
+}
