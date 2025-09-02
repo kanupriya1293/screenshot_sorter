@@ -61,14 +61,15 @@ This project sets up n8n (a workflow automation platform) on your local machine 
 
 2. **Import the JSON Workflow**
    In n8n, click on Create Workflow on top right. It will open a blank project.
-   Select "Import from file" from the dropdown of the three dots (elipsis) on top right corner.
-   Select the `screenshot_sorter.json` file from this repository to import.
+      - Click on the three dots (elipsis) on top right corner.
+      - Select "Import from file" from the dropdown
+      - Select the `screenshot_sorter.json` file from this repository.
    You will now see all the nodes in the workflow and their connections on the canvas.
 
 3. **Add OpenAI Key**
    Notice the error indicator on 'Analyse image' node (find the node with OpenAI Icon). This is because n8n does not know which API key to use.
       - Double click on the 'Analyse image' node.
-      - Click on the dropdown for 'Credentiial to connect with'.
+      - Click on the dropdown for 'Credential to connect with'.
       - If you do not already have one, click on 'Create New Credential'.
       - Paste your OpenAI API key in the API Key input box and hit 'Save'.
       - You should see a message 'Connection tested successfully'. Close the dialog box.
@@ -76,8 +77,9 @@ This project sets up n8n (a workflow automation platform) on your local machine 
    The workflow is now ready for execution.
 
 4. **Execute the Workflow**
-   Hover cursor over the first node 'Trigger Screenshot Sorter' and click on 'Execute workflow' button. This will run the workflow.
-   If the workflow stops after processing a few images to to API rate limit, then pause for the time duration recommended in the error and 'Execute workflow' again.
+      - Hover cursor over the first node 'Trigger Screenshot Sorter'
+      - Click on 'Execute workflow' button. This will run the workflow.
+   If the workflow stops after processing a few images due to rate limiting, then pause for the duration recommended in the error message and 'Execute workflow' again.
 
 5. **Review the Organised Screenshots**
    As the workflow progresses, you should find processed screenshots moved to folder called 'organised' and appropriately categorised in 'keep' or 'delete' folders.
@@ -85,7 +87,10 @@ This project sets up n8n (a workflow automation platform) on your local machine 
 
 ## Optional Enhancements
 
-1. You can modify the workflow to suit your needs - change the destination folder hierarchy, improve classification by enhancing openAI prompt, changing model, inserting specific rule-based nodes or passing more meta-data with image file etc.
+1. You can modify the workflow to suit your needs. You can insert mode rule-based nodes, change orgainsation of screenshots in destination folders. Particularly, you can try to increase classification accuracy at 'Image Analysis' node possibly by,
+   - modifying classification categories and their description in the OpenAI prompt
+   - changing the OpenAI model being used, OR
+   - enhancing the overall prompt and nudging to deep think and reason
 
 2. Create your own n8n workflows using their pre-built tools/ nodes.
 
