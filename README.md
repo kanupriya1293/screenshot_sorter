@@ -1,22 +1,46 @@
-# n8n Workflow Runner
+# Screenshot Sorter
 
-A simple setup to run n8n workflows locally on your Mac. This project provides a pre-built workflow that you can import and run immediately.
+A smart tool to automatically organize and declutter your desktop screenshots using AI. Keep what matters, delete what doesn't.
 
-## What This Does
+## Why This Exists
 
-This project sets up n8n (a workflow automation platform) on your local machine using Docker. Once running, you can import and execute workflows without needing to understand the technical details.
+We take screenshots constantly on Mac - payment confirmations, useful information from podcasts or meetings, coding references, or just capturing moments. They all pile up on your desktop, creating visual clutter and making it hard to find what you actually need.
 
-## How It Works
+This tool helps you:
+- **Save time** by letting AI decide what's worth keeping
+- **Preserve important screenshots** while removing clutter
+- **Clean your desktop** without manual effort
+
+## What It Does
+
+The AI analyzes each screenshot and organizes them automatically:
+
+1. **Scans** your chosen folder for images
+2. **Analyzes** content and importance using AI
+3. **Categorizes** the screenshot into various types to help you review easily
+3. **Organizes** into "keep" or "delete" folders
+4. **Cleans** your desktop by moving processed files
+
+Perfect for:
+- 📱 Payment confirmations and receipts
+- 📚 Educational content from presentations
+- 💻 Code snippets and technical references
+- 🎥 Meeting notes and important information
+
+## How It Works (Technical Details)
+
+This project uses n8n (a workflow automation platform) running locally on your Mac via Docker. The AI-powered workflow:
 
 1. **Setup**: Installs required tools (Docker, Node.js, pnpm) and starts n8n
-2. **Import**: You import your workflow JSON file into n8n
-3. **Run**: Execute the workflow through n8n's web interface
+2. **Import**: You import the pre-built workflow JSON file into n8n
+3. **Configure**: Set your screenshot folder path and OpenAI API key
+4. **Run**: Execute the workflow through n8n's web interface
 
 ## Requirements
 - macOS
 - Git
 - Terminal access
-- Open API Key
+- OpenAI API Key
 
 ## Quick Start
 
@@ -39,7 +63,6 @@ This project sets up n8n (a workflow automation platform) on your local machine 
    ./setup.sh
    ```
    This will install all required dependencies and start n8n automatically.
-
 
    Once setup is complete, you can start and stop n8n as needed:
    ```bash
